@@ -7,25 +7,34 @@
 
 import SwiftUI
 
-
-
 struct MainView: View {
     
     @State private var shouldPresentAddCardForm = false
     
+    @Environment(\.managedObjectContext) private var viewContext
+
+    @FetchRequest(
+        sortDescriptors: [NSSortDescriptor(keyPath: \Card.timestamp, ascending: true)],
+        animation: .default)
+    private var cards: FetchedResults<Card>
+    
+//    @State private var
     var body: some View {
         NavigationView {
             ScrollView {
                 
-                TabView {
-                    ForEach(0..<5) { num in
-                        CreditCardView()
-                            .padding(.bottom, 50)
+                if !cards.isEmpty {
+                    TabView {
+                        ForEach(cards) { card in
+                            CreditCardView()
+                                .padding(.bottom, 50)
+                        }
                     }
+                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+                    .frame(height: 280)
+                    .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
                 }
-                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
-                .frame(height: 280)
-                .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                
                 
                 Spacer()
                     .fullScreenCover(isPresented: $shouldPresentAddCardForm, onDismiss: nil) {
@@ -33,11 +42,51 @@ struct MainView: View {
                     }
             }
             .navigationTitle("Credit Cards")
-            .navigationBarItems(trailing: addCardButton)
+            .navigationBarItems(leading: HStack{
+                addItemButton
+                deleteAllButton
+            }, trailing: addCardButton)
         }
         
     }
     
+    private var deleteAllButton: some View {
+        Button {
+            cards.forEach { card in
+                viewContext.delete(card)
+            }
+            
+            do {
+                try viewContext.save()
+            } catch {
+                
+            }
+        } label: {
+            Text("Delete All")
+        }
+
+    }
+    var addItemButton: some View {
+        Button {
+            withAnimation {
+                let viewContext = PersistenceController.shared.container.viewContext
+                let card = Card(context: viewContext)
+                card.timestamp = Date()
+                
+
+                do {
+                    try viewContext.save()
+                } catch {
+                    
+//                    let nsError = error as NSError
+//                    fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
+                }
+            }
+        } label: {
+            Text("Add Item")
+        }
+
+    }
     struct CreditCardView: View {
         var body: some View {
             VStack(alignment: .leading, spacing: 16) {
@@ -91,6 +140,7 @@ struct MainView: View {
     }
 }
 #Preview {
-//    MainView()
-    AddCardForm()
+    let viewContext = PersistenceController().container.viewContext
+    MainView()
+        .environment(\.managedObjectContext, viewContext)
 }
