@@ -71,16 +71,53 @@ struct AddCardForm: View {
                 
             }
             .navigationTitle("Add Credit Card")
-            .navigationBarItems(leading:
-                                    Button(action: {
+            .navigationBarItems(leading: cancelButton,
+                                trailing: saveButton)
+        }
+    }
+    
+    private var saveButton: some View {
+        Button(action: {
+            let viewContext = PersistenceController.shared.container.viewContext
+            let card = Card(context: viewContext)
+            card.name = self.name
+            card.number = self.cardNumber
+            card.limit = Int32(self.limit) ?? 0
+            card.expMonth = Int16(self.month)
+            card.expYear = Int16(self.year)
+            card.timestamp = Date()
+            card.color = UIColor(self.color).encode()
+            
+            do {
+                try viewContext.save()
+                
                 presentationMode.wrappedValue.dismiss()
+            } catch {
+                print("Failed to persist new card: \(error)")
+            }
+            
+            
+        }, label: { Text("Save") })
+    }
+    
+    private var cancelButton: some View {
+        Button(action: {
+            presentationMode.wrappedValue.dismiss()
             }, label: {
                 Text("Cancel")
-            }))
-        }
+            })
     }
 }
 
+extension UIColor {
+    static func color(from data: Data) -> UIColor? {
+        return try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(data) as? UIColor
+    }
+    
+    func encode() -> Data? {
+        return try? NSKeyedArchiver.archivedData(withRootObject: self, requiringSecureCoding: false)
+    }
+}
 #Preview {
     AddCardForm()
 }
