@@ -33,9 +33,10 @@ struct MainView: View {
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                     .frame(height: 280)
                     .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                } else {
+                    emptyPromtMessage
                 }
-                
-                
+                                
                 Spacer()
                     .fullScreenCover(isPresented: $shouldPresentAddCardForm, onDismiss: nil) {
                         AddCardForm()
@@ -50,6 +51,24 @@ struct MainView: View {
         
     }
     
+    private var emptyPromtMessage: some View {
+        VStack {
+            Text("You currently have no cards in the system.")
+                .padding(.horizontal, 48)
+                .padding(.vertical)
+                .multilineTextAlignment(.center)
+            Button {
+                shouldPresentAddCardForm.toggle()
+            } label: {
+                Text("+ Add your first card")
+                    .foregroundColor(Color(.systemBackground))
+            }
+            .padding(EdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14))
+            .background(Color(.label))
+            .cornerRadius(5)
+            
+        }.font(.system(size: 22,weight: .semibold))
+    }
     private var deleteAllButton: some View {
         Button {
             cards.forEach { card in
@@ -91,10 +110,42 @@ struct MainView: View {
         
         let card: Card
         
+        @State private var shouldShowActionSheet = false
+        
+        private func handleDelete() {
+            let viewContext = PersistenceController.shared.container.viewContext
+            
+            viewContext.delete(card)
+            
+            do {
+                try viewContext.save()
+            } catch {
+                //error handling
+            }
+        }
+        
         var body: some View {
             VStack(alignment: .leading, spacing: 16) {
-                Text(card.name ?? "")
-                    .font(.system(size: 24, weight: .semibold))
+                HStack {
+                    Text(card.name ?? "")
+                        .font(.system(size: 24, weight: .semibold))
+                    Spacer()
+                    Text("")
+                    Button {
+                        shouldShowActionSheet.toggle()
+                    } label: {
+                        Image(systemName: "ellipsis")
+                            .font(.system(size: 28, weight: .bold))
+                    }
+                    .actionSheet(isPresented: $shouldShowActionSheet) {
+                        .init(title: Text(self.card.name ?? ""), message: Text("MESSAGE"), buttons: [
+                            .destructive(Text("Delete Card"), action:
+                                handleDelete),
+                            .cancel()
+                        ])
+                    }
+
+                }
                 HStack {
                     Image("visa")
                         .resizable()
