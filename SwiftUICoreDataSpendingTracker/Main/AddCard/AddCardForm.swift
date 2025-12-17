@@ -101,6 +101,9 @@ struct AddCardForm: View {
         Button(action: {
             let viewContext = PersistenceController.shared.container.viewContext
             
+            if(self.card != nil){
+                print("self card is not nil")
+            }
             let card = self.card != nil ? self.card! : Card(context: viewContext)
             
             card.name = self.name
