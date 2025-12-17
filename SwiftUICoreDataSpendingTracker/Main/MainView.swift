@@ -21,29 +21,49 @@ struct MainView: View {
     
     @State private var cardSelectionIndex = 0
     
+    @State private var selectedCardHash = -1
+    
     var body: some View {
         NavigationView {
             ScrollView {
                 
                 if !cards.isEmpty {
-                    TabView(selection: $cardSelectionIndex) {
-//                        ForEach(0..<cards.count) { i in
-                    ForEach(Array(cards.enumerated()), id: \.element.objectID) { index, card in
-//                            let card = cards[i]
+                    TabView(selection: $selectedCardHash) {
+                        ForEach(cards) { card in
                             CreditCardView(card: card)
                                 .padding(.bottom, 50)
-                                .tag(index)
+                                .tag(card.hash)
+                                
                         }
                     }
                     .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
                     .frame(height: 280)
                     .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
-                    
-                    if cards.indices.contains(cardSelectionIndex) {
-                        let selectedCard = cards[cardSelectionIndex]
-                        Text(selectedCard.name ?? "")
-                        TransactionsListView(card: selectedCard)
+                    .onAppear {
+                        self.selectedCardHash = cards.first?.hash ?? -1
                     }
+//                    TabView(selection: $cardSelectionIndex) {
+////                        ForEach(0..<cards.count) { i in
+//                    ForEach(Array(cards.enumerated()), id: \.element.objectID) { index, card in
+////                            let card = cards[i]
+//                            CreditCardView(card: card)
+//                                .padding(.bottom, 50)
+//                                .tag(index)
+//                        }
+//                    }
+//                    .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+//                    .frame(height: 280)
+//                    .indexViewStyle(PageIndexViewStyle(backgroundDisplayMode: .always))
+                    if let firstIndex = cards.firstIndex(where: {$0.hash == selectedCardHash}) {
+                        let card = self.cards[firstIndex]
+//                        Text(card.name ?? "")
+                        TransactionsListView(card: card)
+                    }
+//                    if cards.indices.contains(cardSelectionIndex) {
+//                        let selectedCard = cards[cardSelectionIndex]
+//                        Text(selectedCard.name ?? "")
+//                        TransactionsListView(card: selectedCard)
+//                    }
                         
                     
                     
@@ -54,7 +74,9 @@ struct MainView: View {
                                 
                 Spacer()
                     .fullScreenCover(isPresented: $shouldPresentAddCardForm, onDismiss: nil) {
-                        AddCardForm()
+                        AddCardForm(card: nil) { card in
+                            self.selectedCardHash = card.hash
+                        }
                     }
             }
             .navigationTitle("Credit Cards")

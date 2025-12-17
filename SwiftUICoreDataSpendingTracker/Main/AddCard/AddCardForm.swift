@@ -10,9 +10,11 @@ import SwiftUI
 struct AddCardForm: View {
     
     let card: Card?
-    
-    init(card: Card? = nil) {
+    var didAddCard: ((Card) ->())? = nil
+                     
+    init(card: Card? = nil, didAddCard: ((Card) ->())? = nil) {
         self.card = card
+        self.didAddCard = didAddCard
         
         _name = State(initialValue: self.card?.name ?? "")
         _cardNumber = State(initialValue: self.card?.number ?? "")
@@ -113,11 +115,12 @@ struct AddCardForm: View {
             card.expYear = Int16(self.year)
             card.timestamp = Date()
             card.color = UIColor(self.color).encode()
-            
+            card.type = cardType
             do {
                 try viewContext.save()
                 
                 presentationMode.wrappedValue.dismiss()
+                didAddCard?(card)
             } catch {
                 print("Failed to persist new card: \(error)")
             }
