@@ -19,20 +19,36 @@ struct CategoriesListView: View {
         animation: .default)
     private var categories: FetchedResults<TransactionCategory>
     
+    @Binding var selectedCategories: Set<TransactionCategory>
+    
     var body: some View {
         Form{
             Section(header: Text("Select a category")) {
                 ForEach(categories) { category in
-                    HStack{
-                        if let data = category.colorData,
-                           let uiColor = UIColor.color(from: data) {
-                            let color = Color(uiColor)
-                            Spacer()
-                                .frame(width: 30, height: 10)
-                                .background(color)
+                    Button {
+                        if selectedCategories.contains(category) {
+                            selectedCategories.remove(category)
+                            
+                        } else {
+                            selectedCategories.insert(category)
                         }
-                        Text(category.name ?? "")
-                        Spacer()
+                    } label: {
+                        HStack(spacing: 12) {
+                            if let data = category.colorData,
+                               let uiColor = UIColor.color(from: data) {
+                                let color = Color(uiColor)
+                                Spacer()
+                                    .frame(width: 30, height: 10)
+                                    .background(color)
+                            }
+                            Text(category.name ?? "")
+                                .foregroundColor(Color(.label))
+                            Spacer()
+                            if selectedCategories.contains(category) {
+                                Image(systemName: "checkmark")
+                            }
+                            
+                        }
                     }
                 }
                 .onDelete { indexSet in
@@ -82,6 +98,6 @@ struct CategoriesListView: View {
 }
 
 #Preview {
-    CategoriesListView()
+    CategoriesListView(selectedCategories: .constant(.init()))
         .environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
 }
