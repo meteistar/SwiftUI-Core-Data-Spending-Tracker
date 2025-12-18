@@ -29,10 +29,18 @@ struct AddTransactionForm: View {
                     TextField("Name", text: $name)
                     TextField("Amount", text: $amount)
                     DatePicker("Date", selection: $date, displayedComponents: .date)
-                    
-                    NavigationLink(destination: Text("new cat page").navigationTitle("New Title"), label: { Text("Many to many") })
                 }
                 
+                Section {
+                    NavigationLink(destination: CategoriesListView().navigationTitle("Categories")
+                        .environment(\.managedObjectContext, PersistenceController.shared.container.viewContext))
+                    {
+                        Text("Select categories")
+                    }
+                } header: {
+                    Text("Categories")
+                }
+
                 Section(header: Text("Photo/Receipt")){
                     Button{
                         shouldPresentPhotoPicker.toggle()
