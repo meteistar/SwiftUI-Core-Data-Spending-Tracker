@@ -161,6 +161,8 @@ struct AddTransactionForm: View {
             
             transaction.card = self.card
             
+            transaction.categories = self.selecetedCategories as NSSet
+            
             do {
                 try context.save()
                 presentationMode.wrappedValue.dismiss()
